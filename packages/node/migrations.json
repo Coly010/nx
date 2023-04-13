@@ -1,4 +1,12 @@
 {
+  "generators": {
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/node with @nx/node",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    }
+  },
   "schematics": {
     "remove-webpack-5-packages": {
       "cli": "nx",

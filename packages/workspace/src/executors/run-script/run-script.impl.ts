@@ -1,4 +1,4 @@
-import { logger } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
 import runScript from 'nx/src/executors/run-script/run-script.impl';
 
 logger.warn(

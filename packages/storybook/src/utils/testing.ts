@@ -1,12 +1,12 @@
 import { join } from 'path';
 import { externalSchematic, Rule, Tree } from '@angular-devkit/schematics';
-import { Tree as NrwlTree } from '@nrwl/devkit';
+import { Tree as NrwlTree } from '@nx/devkit';
 
 import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 
-import { createEmptyWorkspace } from '@nrwl/workspace/testing';
-import { libraryGenerator } from '@nrwl/js';
-import { Linter } from '@nrwl/linter';
+import { createEmptyWorkspace } from '@nx/workspace/testing';
+import { libraryGenerator } from '@nx/js';
+import { Linter } from '@nx/linter';
 
 const testRunner = new SchematicTestRunner(
   '@nrwl/storybook',

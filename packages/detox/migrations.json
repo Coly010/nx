@@ -1,4 +1,12 @@
 {
+  "generators": {
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/detox with @nx/detox",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    }
+  },
   "schematics": {
     "add-build-target-test-13-5-0": {
       "version": "13.5.0-beta.0",

@@ -1,4 +1,4 @@
-import { convertNxExecutor } from '@nrwl/devkit';
+import { convertNxExecutor } from '@nx/devkit';
 
 import buildWebExecutor from './build-web.impl';
 

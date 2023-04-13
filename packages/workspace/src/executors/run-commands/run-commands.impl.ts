@@ -1,4 +1,4 @@
-import { logger } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
 import runCommands from 'nx/src/executors/run-commands/run-commands.impl';
 
 logger.warn(

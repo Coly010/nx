@@ -10,7 +10,7 @@ import {
   updateProjectConfig,
   removeFile,
 } from '../../utils';
-import { names } from '@nrwl/devkit';
+import { names } from '@nx/devkit';
 
 describe('Angular Cypress Component Tests', () => {
   let projectName: string;

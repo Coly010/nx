@@ -1,4 +1,12 @@
 {
+  "generators": {
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/linter with @nx/linter",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    }
+  },
   "schematics": {
     "remove-eslint-project-config-if-no-type-checking-rules": {
       "cli": "nx",

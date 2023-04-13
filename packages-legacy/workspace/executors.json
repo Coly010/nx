@@ -1,0 +1,35 @@
+{
+  "builders": {
+    "run-commands": {
+      "implementation": "@nx/workspace/src/executors/run-commands/compat",
+      "schema": "@nx/workspace/src/executors/run-commands/schema.json",
+      "description": "Run any custom commands with Nx."
+    },
+    "run-script": {
+      "implementation": "@nx/workspace/src/executors/run-script/compat",
+      "schema": "@nx/workspace/src/executors/run-script/schema.json",
+      "description": "Run an NPM script using Nx."
+    }
+  },
+  "executors": {
+    "run-commands": {
+      "implementation": "@nx/workspace/src/executors/run-commands/run-commands.impl",
+      "schema": "@nx/workspace/src/executors/run-commands/schema.json",
+      "description": "Run any custom commands with Nx.",
+      "x-deprecated": "Use nx:run-commands instead. This will be removed in v16."
+    },
+    "counter": {
+      "implementation": "@nx/workspace/src/executors/counter/counter.impl",
+      "batchImplementation": "@nx/workspace/src/executors/counter/counter.impl#batchCounter",
+      "schema": "@nx/workspace/src/executors/counter/schema.json",
+      "description": "A dummy executor useful for E2E tests.",
+      "hidden": true
+    },
+    "run-script": {
+      "implementation": "@nx/workspace/src/executors/run-script/run-script.impl",
+      "schema": "@nx/workspace/src/executors/run-script/schema.json",
+      "description": "Run an NPM script using Nx.",
+      "x-deprecated": "Use nx:run-script instead. This will be removed in v16."
+    }
+  }
+}

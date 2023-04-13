@@ -1,4 +1,4 @@
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import next from 'next';
 import { NextServerOptions, ProxyConfig } from '../../../utils/types';
 import { tsNodeRegister } from './tsnode-register';
