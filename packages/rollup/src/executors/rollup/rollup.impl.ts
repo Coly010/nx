@@ -28,6 +28,7 @@ import { analyze } from './lib/analyze-plugin';
 import { deleteOutputDir } from '../../utils/fs';
 import { swc } from './lib/swc-plugin';
 import { updatePackageJson } from './lib/update-package-json';
+import { convertCopyAssetsToRollupOptions } from '../../utils/convert-assets-to-rollup-options';
 
 export type RollupExecutorEvent = {
   success: boolean;
@@ -335,23 +336,6 @@ function createTsCompilerOptions(
     compilerOptions['emitDeclarationOnly'] = true;
   }
   return compilerOptions;
-}
-
-interface RollupCopyAssetOption {
-  src: string;
-  dest: string;
-}
-
-function convertCopyAssetsToRollupOptions(
-  outputPath: string,
-  assets: AssetGlobPattern[]
-): RollupCopyAssetOption[] {
-  return assets
-    ? assets.map((a) => ({
-        src: join(a.input, a.glob).replace(/\\/g, '/'),
-        dest: join(outputPath, a.output).replace(/\\/g, '/'),
-      }))
-    : undefined;
 }
 
 function readCompatibleFormats(

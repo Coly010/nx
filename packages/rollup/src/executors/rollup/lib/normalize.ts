@@ -14,10 +14,9 @@ export interface NormalizedRollupExecutorOptions extends RollupExecutorOptions {
 
 export function normalizeRollupExecutorOptions(
   options: RollupExecutorOptions,
-  context: ExecutorContext,
+  { root }: { root: string },
   sourceRoot: string
 ): NormalizedRollupExecutorOptions {
-  const { root } = context;
   const main = `${root}/${options.main}`;
   const entryRoot = dirname(main);
   const project = options.project
@@ -45,7 +44,7 @@ export function normalizeRollupExecutorOptions(
     skipTypeCheck: options.skipTypeCheck || false,
     additionalEntryPoints: createEntryPoints(
       options.additionalEntryPoints,
-      context.root
+      root
     ),
   };
 }

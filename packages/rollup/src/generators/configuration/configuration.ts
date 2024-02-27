@@ -15,6 +15,10 @@ import { RollupExecutorOptions } from '../../executors/rollup/schema';
 import { RollupProjectSchema } from './schema';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { generateConfig } from './lib/generate-config';
+import { join } from 'path';
+import { normalizeRollupExecutorOptions } from '../../executors/rollup/lib/normalize';
+import { createRollupConfigOptions } from '@nx/rollup/src/generators/configuration/lib/create-rollup-config-options';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -86,10 +90,6 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
     format: options.format,
   };
 
-  if (options.rollupConfig) {
-    buildOptions.rollupConfig = options.rollupConfig;
-  }
-
   if (tree.exists(joinPathFragments(project.root, 'README.md'))) {
     buildOptions.assets = [
       {
@@ -98,6 +98,19 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
         output: '.',
       },
     ];
+  }
+
+  if (options.rollupConfig) {
+    buildOptions.rollupConfig = options.rollupConfig;
+  } else {
+    const rollupOptions = createRollupConfigOptions(
+      tree,
+      options,
+      buildOptions
+    );
+    buildOptions.rollupConfig = rollupOptions.rollupConfig;
+
+    generateConfig(tree, rollupOptions);
   }
 
   updateProjectConfiguration(tree, options.project, {
