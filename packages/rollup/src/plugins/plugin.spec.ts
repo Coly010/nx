@@ -152,4 +152,75 @@ module.exports = config;
       expect(nodes).toMatchSnapshot();
     });
   });
+  describe('nested config project', () => {
+    const tempFs = new TempFs('test');
+
+    beforeEach(() => {
+      context = {
+        nxJsonConfiguration: {
+          namedInputs: {
+            default: ['{projectRoot}/**/*'],
+            production: ['!{projectRoot}/**/*.spec.ts'],
+          },
+        },
+        workspaceRoot: tempFs.tempDir,
+      };
+
+      tempFs.createFileSync(
+        'mylib/package.json',
+        JSON.stringify({ name: 'mylib' })
+      );
+      tempFs.createFileSync(
+        'mylib/src/index.js',
+        `export function main() { 
+      console.log("hello world");
+      }`
+      );
+      tempFs.createFileSync(
+        'configs/rollup.config.js',
+        `
+const config = {
+  input: 'mylib/src/index.js',
+  output: [
+    {
+      file: 'build/bundle.js',
+      format: 'cjs',
+      sourcemap: true
+    },
+    {
+      file: 'dist/bundle.es.js',
+      format: 'es',
+      sourcemap: true
+    }
+  ],
+  plugins: [],
+};
+
+module.exports = config;
+      `
+      );
+
+      process.chdir(tempFs.tempDir);
+    });
+
+    afterEach(() => {
+      jest.resetModules();
+      tempFs.cleanup();
+      process.chdir(cwd);
+    });
+
+    it('should create nodes', async () => {
+      // ACT
+      const nodes = await createNodesFunction(
+        'configs/rollup.config.js',
+        {
+          buildTargetName: 'build',
+        },
+        context
+      );
+
+      // ASSERT
+      expect(nodes).toMatchSnapshot();
+    });
+  });
 });

@@ -16,6 +16,8 @@ import { getLockFileName } from '@nx/js';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { type RollupOptions } from 'rollup';
 import * as loadConfigFile from 'rollup/dist/loadConfigFile';
+import { fileExists } from '@nx/e2e/utils';
+import { fileExistsSync } from 'tsconfig-paths/lib/filesystem';
 
 const cachePath = join(projectGraphCacheDirectory, 'rollup.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
@@ -49,8 +51,19 @@ export interface RollupPluginOptions {
 export const createNodes: CreateNodes<RollupPluginOptions> = [
   '**/rollup.config.{js,cjs,mjs}',
   async (configFilePath, options, context) => {
-    const projectRoot = dirname(configFilePath);
-    const fullyQualifiedProjectRoot = join(context.workspaceRoot, projectRoot);
+    const rollupConfig = await loadConfigFromFile(configFilePath, context);
+    const fullyQualifiedProjectRoot = findProjectRootFromConfig(
+      rollupConfig,
+      dirname(configFilePath),
+      context.workspaceRoot
+    );
+    if (!fullyQualifiedProjectRoot) {
+      return {};
+    }
+    const projectRoot = normalizeProjectRoot(
+      fullyQualifiedProjectRoot,
+      context.workspaceRoot
+    );
     // Do not create a project if package.json and project.json do not exist
     const siblingFiles = readdirSync(fullyQualifiedProjectRoot);
     if (
@@ -68,7 +81,13 @@ export const createNodes: CreateNodes<RollupPluginOptions> = [
 
     const targets = targetsCache[hash]
       ? targetsCache[hash]
-      : await buildRollupTarget(configFilePath, projectRoot, options, context);
+      : await buildRollupTarget(
+          rollupConfig,
+          configFilePath,
+          projectRoot,
+          options,
+          context
+        );
 
     calculatedTargets[hash] = targets;
     return {
@@ -83,17 +102,13 @@ export const createNodes: CreateNodes<RollupPluginOptions> = [
 ];
 
 async function buildRollupTarget(
+  rollupConfig: RollupOptions[],
   configFilePath: string,
   projectRoot: string,
   options: RollupPluginOptions,
   context: CreateNodesContext
 ): Promise<Record<string, TargetConfiguration>> {
   const namedInputs = getNamedInputs(projectRoot, context);
-  const rollupConfig = (
-    (await loadConfigFile(
-      joinPathFragments(context.workspaceRoot, configFilePath)
-    )) as { options: RollupOptions[] }
-  ).options;
   const outputs = getOutputs(rollupConfig, projectRoot);
 
   const targets: Record<string, TargetConfiguration> = {};
@@ -152,4 +167,112 @@ function normalizeOptions(options: RollupPluginOptions) {
   options.buildTargetName ??= 'build';
 
   return options;
+}
+
+async function loadConfigFromFile(
+  configFilePath: string,
+  context: CreateNodesContext
+): Promise<RollupOptions[]> {
+  return (
+    (await loadConfigFile(
+      joinPathFragments(context.workspaceRoot, configFilePath)
+    )) as { options: RollupOptions[] }
+  ).options;
+}
+
+function findProjectRootFromConfig(
+  rollupConfig: RollupOptions[],
+  configFileDirectory: string,
+  workspaceRoot: string
+) {
+  const inputPaths: string[] = [];
+  for (const config of rollupConfig) {
+    if (!config.input) {
+      continue;
+    }
+
+    if (Array.isArray(config.input)) {
+      inputPaths.push(...config.input);
+    } else if (typeof config.input === 'string') {
+      inputPaths.push(config.input);
+    } else {
+      inputPaths.push(...Object.values(config.input));
+    }
+  }
+
+  let commonDirectory: string;
+  let errorNoCommonDirectory = false;
+
+  /**
+   * Try to determine a common path between multiple inputs if they exist
+   *  1. Normalize for relative paths to the config file
+   *  2. If commonDirectory is not the same as the next input's directory
+   *     a. If the commonDirectory starts with the next input's directory, set the next input's directory as the commonDirectory
+   *     b. If the next input's directory starts with the commonDirectory, continue with commonDirectory
+   *     c. Otherwise, error out, as there is no commonDirectory
+   *
+   * It may be possible to continue to search up directories to the workspaceRoot to find a common directory, but this might cross projects
+   * and becomes more complex of an operation and is not currently supported
+   */
+  for (const inputPath of inputPaths) {
+    let inputDirectory = dirname(inputPath);
+    if (!inputDirectory.startsWith('/')) {
+      inputDirectory = join(configFileDirectory, inputDirectory);
+      if (!existsSync(inputDirectory)) {
+        inputDirectory = join(workspaceRoot, dirname(inputPath));
+      }
+    }
+    if (!commonDirectory) {
+      commonDirectory = inputDirectory;
+    } else if (commonDirectory !== inputDirectory) {
+      if (commonDirectory.startsWith(inputDirectory)) {
+        commonDirectory = inputDirectory;
+      } else if (!inputDirectory.startsWith(commonDirectory)) {
+        errorNoCommonDirectory = true;
+        break;
+      }
+    }
+  }
+
+  if (errorNoCommonDirectory) {
+    return false;
+  }
+
+  let projectFileSearchPath = commonDirectory.startsWith(workspaceRoot)
+    ? commonDirectory
+    : join(workspaceRoot, commonDirectory);
+  let searchPathDelimiter = dirname(workspaceRoot);
+  let errorNoProjectFileFound = true;
+  while (projectFileSearchPath !== searchPathDelimiter) {
+    const siblingFiles = readdirSync(projectFileSearchPath);
+    if (
+      siblingFiles.includes('package.json') ||
+      siblingFiles.includes('project.json')
+    ) {
+      errorNoProjectFileFound = false;
+      break;
+    }
+    projectFileSearchPath = dirname(projectFileSearchPath);
+  }
+
+  if (errorNoProjectFileFound) {
+    return false;
+  }
+
+  return projectFileSearchPath;
+}
+
+function normalizeProjectRoot(
+  fullyQualifiedProjectRoot: string,
+  workspaceRoot: string
+) {
+  let projectRoot = fullyQualifiedProjectRoot.replace(workspaceRoot, '');
+  if (projectRoot === '') {
+    projectRoot = '.';
+  }
+  if (projectRoot.startsWith('/') || projectRoot.startsWith('\\')) {
+    projectRoot = projectRoot.slice(1);
+  }
+
+  return projectRoot;
 }
