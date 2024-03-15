@@ -12,3 +12,7 @@ export type {
   RollupExecutorOptions,
 } from './src/executors/rollup/schema';
 export * from './src/executors/rollup/rollup.impl';
+export {
+  default as RollupPluginNx,
+  NxRollupPluginOptions,
+} from './src/plugins/rollup-plugin-nx';

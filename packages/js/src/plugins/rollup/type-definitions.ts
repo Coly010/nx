@@ -18,7 +18,7 @@ import { stripIndents } from '@nx/devkit';
  */
 export function typeDefinitions(options: {
   projectRoot: string;
-  main: string;
+  main?: string;
 }) {
   return {
     name: 'dts-bundle',
